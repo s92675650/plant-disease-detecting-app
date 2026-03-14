@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Farmer's Friendly • Plant Disease Detection</title>
+    <!-- Font Awesome 6 (free icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #0b3b2c 0%, #1b5e3f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        /* Main app card - using a nature-themed background */
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        /* Background image overlay - using your theme */
+        .app-container::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); /* Nature/agriculture background */
+            background-size: cover;
+            background-position: center;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app-content {
+            position: relative;
+            z-index: 2;
+            padding: 20px 18px 30px;
+        }
+
+        /* App Header with logo and title */
+        .app-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 12px 16px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 20px rgba(0, 40, 0, 0.1);
+        }
+
+        .app-logo {
+            width: 48px;
+            height: 48px;
+            background: #2e7d32;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            /* Logo image - replace with your actual logo URL */
+            background-image: url('https://via.placeholder.com/48/2e7d32/ffffff?text=F');
+            background-size: cover;
+        }
+
+        .app-title {
+            flex: 1;
+        }
+
+        .app-title h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1c4d2b;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .app-title p {
+            font-size: 12px;
+            color: #2b5e3a;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        /* Scan area - camera simulation */
+        .scan-section {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 28px;
+            padding: 20px 16px;
+            margin-bottom: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 15px 30px -12px rgba(0, 60, 0, 0.3);
+        }
+
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .section-label i {
+            font-size: 20px;
+            color: #1e4d2e;
+            background: rgba(50, 120, 70, 0.15);
+            padding: 8px;
+            border-radius: 50%;
+        }
+
+        .section-label span {
+            font-weight: 600;
+            color: #1b4b2a;
+            font-size: 16px;
+            letter-spacing: 0.3px;
+        }
+
+        .camera-preview {
+            background: #d4e3d4;
+            border-radius: 24px;
+            height: 170px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #3b7a4b;
+            background-image: linear-gradient(145deg, #c8e0c8 0%, #e2f0e2 100%);
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .camera-preview i {
+            font-size: 50px;
+            color: #1d5e3a;
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+
+        .camera-preview p {
+            color: #1b4e2e;
+            font-weight: 500;
+            background: rgba(255,255,255,0.6);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 14px;
+        }
+
+        .scan-btn {
+            background: #1d5e3a;
+            border: none;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 10px 15px -5px #1b4e2e80;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .scan-btn i {
+            font-size: 18px;
+        }
+
+        .scan-btn:active {
+            transform: scale(0.97);
+            background: #124d2d;
+        }
+
+        /* Disease result card (initially hidden) */
+        .disease-result {
+            margin-top: 18px;
+            background: rgba(245, 255, 240, 0.95);
+            border-radius: 20px;
+            padding: 16px;
+            border-left: 6px solid #cc3b3b;
+            display: none;
+        }
+
+        .disease-name {
+            font-weight: 700;
+            color: #a12a2a;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .disease-desc {
+            color: #1f4a2d;
+            font-size: 14px;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .pesticide-info {
+            background: #f0f7ea;
+            padding: 12px;
+            border-radius: 16px;
+            font-size: 14px;
+            border: 1px solid #a5d6a5;
+        }
+
+        .pesticide-info strong {
+            color: #1f5e3a;
+        }
+
+        /* Two feature cards (scanner & market) */
+        .features-row {
+            display: flex;
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .feature-card {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 24px;
+            padding: 18px 6px 14px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 10px 20px -8px rgba(0, 30, 0, 0.2);
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .feature-card.active {
+            background: rgba(220, 240, 210, 0.95);
+            border: 2px solid #267347;
+            transform: translateY(-3px);
+        }
+
+        .feature-card i {
+            font-size: 32px;
+            color: #1f6a3b;
+            margin-bottom: 8px;
+        }
+
+        .feature-card span {
+            display: block;
+            font-weight: 600;
+            color: #1c4827;
+            font-size: 14px;
+        }
+
+        .feature-card small {
+            font-size: 11px;
+            color: #326e3f;
+            opacity: 0.8;
+        }
+
+        /* Market info panel (2nd section) */
+        .market-panel {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 26px;
+            padding: 18px;
+            border: 1px solid rgba(255,255,240,0.8);
+            display: none;
+        }
+
+        .market-panel.show {
+            display: block;
+        }
+
+        .market-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .market-header i {
+            font-size: 24px;
+            color: #1f6236;
+        }
+
+        .market-header h3 {
+            color: #154f27;
+            font-size: 18px;
+        }
+
+        .crop-price-item {
+            background: #e2f0de;
+            padding: 12px 16px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .crop-name {
+            font-weight: 600;
+            color: #134b22;
+        }
+
+        .crop-price {
+            background: #1d5e3a;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .soil-info {
+            background: #c8e0ca;
+            border-radius: 18px;
+            padding: 16px;
+            margin: 15px 0;
+            border-left: 5px solid #795548;
+        }
+
+        .weather-note {
+            display: flex;
+            gap: 12px;
+            background: #cbd5e0;
+            padding: 12px;
+            border-radius: 18px;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .weather-note i {
+            font-size: 26px;
+            color: #2c5282;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-content">
+            <!-- Header with logo and title -->
+            <div class="app-header">
+                <div class="app-logo" style="background-image: url('https://via.placeholder.com/48/2e7d32/ffffff?text=F'); background-size: cover;">
+                    <!-- Replace with your actual logo URL: https://drive.google.com/file/d/1q0PCIwUFFI9ajEMruKPaeMHLowbAa_5k/view -->
+                </div>
+                <div class="app-title">
+                    <h1>FarmScan</h1>
+                    <p>Plant disease & market advisor</p>
+                </div>
+            </div>
+
+            <!-- Scan setup & camera section -->
+            <div class="scan-section">
+                <div class="section-label">
+                    <i class="fas fa-camera-retro"></i>
+                    <span>Scan leaf for disease</span>
+                </div>
+                <!-- Camera preview / scan area -->
+                <div class="camera-preview" id="cameraPreview">
+                    <i class="fas fa-leaf"></i>
+                    <p id="previewText">📸 Tap 'Scan' to simulate</p>
+                </div>
+                <!-- Scan button -->
+                <button class="scan-btn" id="scanButton">
+                    <i class="fas fa-search"></i> SCAN LEAF
+                </button>
+
+                <!-- Disease result panel (appears after scan) -->
+                <div class="disease-result" id="diseaseResult">
+                    <div class="disease-name" id="diseaseName">Late Blight detected</div>
+                    <div class="disease-desc" id="diseaseDesc">Remove infected leaves, improve air circulation.</div>
+                    <div class="pesticide-info" id="pesticideInfo">
+                        <strong><i class="fas fa-flask"></i> Recommended:</strong> Copper fungicide or Mancozeb. Apply every 7 days.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two icons: scanner & market (with active states) -->
+            <div class="features-row">
+                <div class="feature-card active" id="scannerCard">
+                    <i class="fas fa-camera"></i>
+                    <span>Scanner</span>
+                    <small>detect disease</small>
+                </div>
+                <div class="feature-card" id="marketCard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Market</span>
+                    <small>prices & soil</small>
+                </div>
+            </div>
+
+            <!-- Market & soil panel (2nd section) initially hidden -->
+            <div class="market-panel" id="marketPanel">
+                <div class="market-header">
+                    <i class="fas fa-seedling"></i>
+                    <h3>Market prices & suitability</h3>
+                </div>
+                <!-- Current prices -->
+                <div class="crop-price-item">
+                    <span class="crop-name">🍅 Tomato</span>
+                    <span class="crop-price">₹42/kg</span>
+                </div>
+                <div class="crop-price-item">
+                    <span class="crop-name">🥦 Broccoli</span>
+                    <span class="crop-price">₹55/kg</span>
+                </div>
+                <div class="crop-price-item">
+                    <span class="crop-name">🌶️ Bell Pepper</span>
+                    <span class="crop-price">₹68/kg</span>
+                </div>
+
+                <!-- Soil suitability -->
+                <div class="soil-info">
+                    <strong><i class="fas fa-earth-asia"></i> Soil analysis:</strong><br>
+                    Your soil pH is 6.8 (slightly acidic). Suitable for tomatoes, peppers. For broccoli, add compost to lower pH.
+                </div>
+
+                <!-- Weather check -->
+                <div class="weather-note">
+                    <i class="fas fa-cloud-sun-rain"></i>
+                    <div>
+                        <strong>Weather history:</strong> Last 30 days: 24°C avg, 120mm rain. Ideal for tomatoes, peppers. Broccoli may need partial shade.
+                    </div>
+                </div>
+                <p style="font-size:12px; margin-top:10px; color:#2d5a3a;"><i class="far fa-clock"></i> Updated 2 hours ago</p>
+            </div>
+
+            <!-- tiny footer note -->
+            <p style="text-align:center; margin-top:20px; font-size:11px; color:#3d6b49; opacity:0.7;">FarmScan • smart agriculture</p>
+        </div>
+    </div>
+
+    <!-- JavaScript for interactivity, scanning simulation, and panel switching -->
+    <script>
+        (function() {
+            // DOM elements
+            const scanBtn = document.getElementById('scanButton');
+            const previewImg = document.getElementById('cameraPreview');
+            const previewText = document.getElementById('previewText');
+            const diseasePanel = document.getElementById('diseaseResult');
+            const diseaseName = document.getElementById('diseaseName');
+            const diseaseDesc = document.getElementById('diseaseDesc');
+            const pestInfo = document.getElementById('pesticideInfo');
+
+            const scannerCard = document.getElementById('scannerCard');
+            const marketCard = document.getElementById('marketCard');
+            const marketPanel = document.getElementById('marketPanel');
+            
+            // Sample disease database (simulated AI response)
+            const diseases = [
+                {
+                    name: 'Early Blight',
+                    desc: 'Fungal disease causing dark spots with concentric rings.',
+                    pesticide: 'Chlorothalonil or copper spray. Remove affected leaves.'
+                },
+                {
+                    name: 'Powdery Mildew',
+                    desc: 'White powdery spots on leaves. Common in dry weather.',
+                    pesticide: 'Sulfur spray or neem oil. Improve air circulation.'
+                },
+                {
+                    name: 'Leaf Rust',
+                    desc: 'Orange/brown pustules on underside of leaves.',
+                    pesticide: 'Mancozeb or propiconazole. Avoid overhead watering.'
+                },
+                {
+                    name: 'Bacterial Wilt',
+                    desc: 'Leaves wilt rapidly, vascular tissue brown.',
+                    pesticide: 'No cure; remove plants. Use resistant varieties next time.'
+                },
+                {
+                    name: 'Septoria Leaf Spot',
+                    desc: 'Small dark spots with light centers.',
+                    pesticide: 'Copper fungicide. Mulch to prevent splash.'
+                }
+            ];
+
+            // scan event
+            scanBtn.addEventListener('click', function() {
+                // Simulate camera scanning - change preview style
+                previewImg.style.background = '#b8d9b8';
+                previewText.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Scanning...';
+                
+                // Simulate processing delay
+                setTimeout(() => {
+                    // Random disease for demo
+                    const randomIndex = Math.floor(Math.random() * diseases.length);
+                    const dis = diseases[randomIndex];
+                    
+                    diseaseName.innerText = dis.name;
+                    diseaseDesc.innerText = dis.desc;
+                    pestInfo.innerHTML = `<strong><i class="fas fa-flask"></i> Recommended:</strong> ${dis.pesticide}`;
+                    
+                    // Show disease panel
+                    diseasePanel.style.display = 'block';
+                    
+                    // Reset preview
+                    previewImg.style.background = '#c8e0c8';
+                    previewText.innerHTML = '📸 New scan ready';
+                    
+                    // Switch to scanner card active if not already
+                    scannerCard.classList.add('active');
+                    marketCard.classList.remove('active');
+                    marketPanel.classList.remove('show');
+                }, 1500);
+            });
+
+            // Switch between scanner and market sections via cards
+            scannerCard.addEventListener('click', function() {
+                // Active state
+                scannerCard.classList.add('active');
+                marketCard.classList.remove('active');
+                
+                // Hide market panel
+                marketPanel.classList.remove('show');
+                
+                // Optionally scroll to scan section (smooth)
+                document.querySelector('.scan-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+
+            marketCard.addEventListener('click', function() {
+                marketCard.classList.add('active');
+                scannerCard.classList.remove('active');
+                
+                // Show market panel
+                marketPanel.classList.add('show');
+                
+                // Optionally hide disease result? not necessary, but keep it tidy
+                // diseasePanel.style.display = 'none';   // we may keep disease visible if user wants both? better to leave.
+            });
+
+            // Optional: manual trigger to show demo data on page load? not needed, but we prefill market panel.
+
+            // Simulate location-based weather history (static but realistic)
+            // For extra demo, we can add a second random disease scan when they click on scannerCard if they want, but we already have scan button.
+
+            // Bonus: simulate that after showing market, if you scan, market hides? just for UX
+            // But we want the market panel to stay if user taps market again? it's fine.
+
+            // You can also add click on camera preview to activate file upload (but not required for simulation)
+
+            // Make logo clickable? No needed.
+        })();
+    </script>
+
+    <!-- Note: replace placeholder image URLs with your actual Google Drive links after downloading.
+         For Google Drive images, you need to use direct links: 
+         https://drive.google.com/uc?export=view&id=FILE_ID 
+    -->
+    <!-- Example: Logo: https://drive.google.com/uc?export=view&id=1q0PCIwUFFI9ajEMruKPaeMHLowbAa_5k -->
+    <!-- Background: https://drive.google.com/uc?export=view&id=1FsMVktDOU76eTl0G48XAuDYAaVU4DUno -->
+    <!-- Inline style background-image for .app-container::before and .app-logo can use these URLs.
+         Due to CORS, you may need to download and host locally, or use as direct if accessible.
+    -->
+</body>
+</html>
